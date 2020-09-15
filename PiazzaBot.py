@@ -35,7 +35,7 @@ def cook_prepped_posts():
         for cooked_post in cooked_posts:
             print(cooked_post)
             deliver_payload("New Piazza Post Made!", "Subject: " + str(cooked_post["subject"]) + ""
-                                                     "\nTA Group Requested: " + str(', '.join(find_associated_groups(cooked_post['tags'])))
+                                                     #"\nTA Group Requested: " + str(', '.join(find_associated_groups(cooked_post['tags'])))
                             , 000000)
     else:
         print('No new unread posts found.')
