@@ -2,11 +2,10 @@ from piazza_api import Piazza
 from piazza_api import network as net
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from secrets import p_pass, p_email, p_network, d_url
-import sqlite3
+import sqlite3, html
 
 prepped_posts = []
 cooked_posts = []
-
 
 def find_new_posts(limit=50):
     p_instance = Piazza()
@@ -18,7 +17,6 @@ def find_new_posts(limit=50):
             tags = ds_posts['feed'][x]['tags']
             if 'instructor-note' not in tags:
                 prepped_posts.append(ds_posts['feed'][x])
-
 
 def cook_prepped_posts():
     if len(prepped_posts) > 0:
@@ -33,24 +31,13 @@ def cook_prepped_posts():
         prepped_posts[:] = []
         # Send-off to the web-hook
         for cooked_post in cooked_posts:
-            print(cooked_post)
+            #print(cooked_post)
             post_url = 'https://piazza.com/class/' + str(cooked_post["nid"]) + "?cid=" + str(cooked_post["nr"])
-            desc = "<" + post_url + ">\n" + str(cooked_post["content_snipet"])
-            deliver_payload(str(cooked_post["subject"]), desc, 000000)
+            post_content = html.unescape(cooked_post["content_snipet"])
+            desc = "<" + post_url + ">\n" + post_content
+            deliver_payload(cooked_post["subject"], desc, 000000)
     else:
         print('No new unread posts found.')
-
-
-def find_associated_groups(tags):
-    groups = []
-    for tag in tags:
-        c.execute('''SELECT * FROM group_tags WHERE group_tags.tag=?''', (tag,))
-        ret = c.fetchone()
-        if ret is not None:
-            for group in ret[1].split(","):
-                groups.append(str("<@" + group.strip() + ">"))
-    return groups
-
 
 def deliver_payload(title, desc, color):
     embed = DiscordEmbed(title=str(title), description=str(desc), color=color)
@@ -61,7 +48,6 @@ def deliver_payload(title, desc, color):
 def db_has_id(post_id):
     c.execute('''SELECT * FROM read_posts WHERE id LIKE ?''', (post_id,))
     return True if c.fetchone() is not None else False
-
 
 if __name__ == '__main__':
     find_new_posts()
