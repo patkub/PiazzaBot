@@ -34,8 +34,9 @@ def cook_prepped_posts():
         # Send-off to the web-hook
         for cooked_post in cooked_posts:
             print(cooked_post)
-            deliver_payload(str(cooked_post["subject"]), str(cooked_post["content_snipet"])
-                            , 000000)
+            post_url = 'https://piazza.com/class/' + str(cooked_post["nid"]) + "?cid=" + str(cooked_post["nr"])
+            desc = "<" + post_url + ">\n" + str(cooked_post["content_snipet"])
+            deliver_payload(str(cooked_post["subject"]), desc, 000000)
     else:
         print('No new unread posts found.')
 
