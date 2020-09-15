@@ -34,8 +34,7 @@ def cook_prepped_posts():
         # Send-off to the web-hook
         for cooked_post in cooked_posts:
             print(cooked_post)
-            deliver_payload("New Piazza Post Made!", "Subject: " + str(cooked_post["subject"]) + ""
-                                                     #"\nTA Group Requested: " + str(', '.join(find_associated_groups(cooked_post['tags'])))
+            deliver_payload(str(cooked_post["subject"]), str(cooked_post["content_snipet"])
                             , 000000)
     else:
         print('No new unread posts found.')
