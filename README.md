@@ -8,7 +8,7 @@ d_url = '' # discord webhook url, https://discordapp.com/api/webhooks/...
 ```
 
 ```
-pip install discord-webhook piazza-api
+pip install aiohttp discord piazza-api
 ```
 
 Crontab every 5 minutes?

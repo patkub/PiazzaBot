@@ -2,6 +2,7 @@ from piazza_api import Piazza
 from piazza_api import network as net
 from discord import Webhook, AsyncWebhookAdapter, Embed
 from secrets import p_pass, p_email, p_network, d_url
+from datetime import datetime
 import sqlite3, html, aiohttp, asyncio
 
 prepped_posts = []
@@ -32,12 +33,13 @@ async def cook_prepped_posts():
         # Send-off to the web-hook
         for cooked_post in cooked_posts:
             #print(cooked_post)
+            title = html.unescape(cooked_post["subject"])
+            desc = html.unescape(cooked_post["content_snipet"])
             post_url = 'https://piazza.com/class/' + str(cooked_post["nid"]) + "?cid=" + str(cooked_post["nr"])
-            post_content = html.unescape(cooked_post["content_snipet"])
-            title = cooked_post["subject"]
-            desc = "<" + post_url + ">\n" + post_content
+            # datetime.strptime('2017-12-10T18:06:55Z', '%Y-%m-%dT%H:%M:%SZ')
+            date = datetime.strptime(cooked_post["updated"], '%Y-%m-%dT%H:%M:%SZ')
             
-            embed = Embed(title=str(title), description=str(desc), color=000000)
+            embed = Embed(title=title, description=desc, url=post_url, timestamp=date, color=000000)
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(d_url, adapter=AsyncWebhookAdapter(session))
                 await webhook.send(embed=embed)
