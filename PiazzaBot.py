@@ -1,8 +1,8 @@
 from piazza_api import Piazza
 from piazza_api import network as net
-from discord_webhook import DiscordWebhook, DiscordEmbed
+from discord import Webhook, AsyncWebhookAdapter, Embed
 from secrets import p_pass, p_email, p_network, d_url
-import sqlite3, html
+import sqlite3, html, aiohttp, asyncio
 
 prepped_posts = []
 cooked_posts = []
@@ -18,7 +18,7 @@ def find_new_posts(limit=50):
             if 'instructor-note' not in tags:
                 prepped_posts.append(ds_posts['feed'][x])
 
-def cook_prepped_posts():
+async def cook_prepped_posts():
     if len(prepped_posts) > 0:
         for prepped_post in prepped_posts:
             # Does the database contain the id?
@@ -34,16 +34,15 @@ def cook_prepped_posts():
             #print(cooked_post)
             post_url = 'https://piazza.com/class/' + str(cooked_post["nid"]) + "?cid=" + str(cooked_post["nr"])
             post_content = html.unescape(cooked_post["content_snipet"])
+            title = cooked_post["subject"]
             desc = "<" + post_url + ">\n" + post_content
-            deliver_payload(cooked_post["subject"], desc, 000000)
+            
+            embed = Embed(title=str(title), description=str(desc), color=000000)
+            async with aiohttp.ClientSession() as session:
+                webhook = Webhook.from_url(d_url, adapter=AsyncWebhookAdapter(session))
+                await webhook.send(embed=embed)
     else:
         print('No new unread posts found.')
-
-def deliver_payload(title, desc, color):
-    embed = DiscordEmbed(title=str(title), description=str(desc), color=color)
-    webhook.add_embed(embed)
-    webhook.execute()
-
 
 def db_has_id(post_id):
     c.execute('''SELECT * FROM read_posts WHERE id LIKE ?''', (post_id,))
@@ -53,7 +52,8 @@ if __name__ == '__main__':
     find_new_posts()
     conn = sqlite3.connect('read_posts.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS read_posts (id text)''')
-    webhook = DiscordWebhook(url=d_url)
-    cook_prepped_posts()
+    c.execute('''CREATE TABLE IF NOT EXISTS read_posts (id text)''')  
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(cook_prepped_posts())
+    loop.close()
     c.close()
