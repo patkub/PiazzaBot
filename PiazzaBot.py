@@ -39,9 +39,9 @@ def cook_prepped_posts():
             desc = html_parser.unescape(cooked_post["content_snipet"])
             post_url = 'https://piazza.com/class/' + str(cooked_post["nid"]) + "?cid=" + str(cooked_post["nr"])
             # datetime.strptime('2017-12-10T18:06:55Z', '%Y-%m-%dT%H:%M:%SZ')
-            date = datetime.strptime(cooked_post["updated"], '%Y-%m-%dT%H:%M:%SZ')
+            #date = datetime.strptime(cooked_post["updated"], '%Y-%m-%dT%H:%M:%SZ')
             
-            embed = DiscordEmbed(title=title, description=desc, url=post_url, timestamp=date, color=000000)
+            embed = DiscordEmbed(title=title, description=desc, url=post_url, color=000000)
             webhook.add_embed(embed)
             webhook.execute()
     else:
