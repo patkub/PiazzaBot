@@ -1,9 +1,9 @@
 from piazza_api import Piazza
 from piazza_api import network as net
-from discord import Webhook, AsyncWebhookAdapter, Embed
+from discord_webhook import DiscordWebhook, DiscordEmbed
 from secrets import p_pass, p_email, p_network, d_url
 from datetime import datetime
-import sqlite3, html, aiohttp, asyncio
+import sqlite3, html
 
 prepped_posts = []
 cooked_posts = []
@@ -19,7 +19,7 @@ def find_new_posts(limit=50):
             if 'instructor-note' not in tags:
                 prepped_posts.append(ds_posts['feed'][x])
 
-async def cook_prepped_posts():
+def cook_prepped_posts():
     if len(prepped_posts) > 0:
         for prepped_post in prepped_posts:
             # Does the database contain the id?
@@ -39,10 +39,9 @@ async def cook_prepped_posts():
             # datetime.strptime('2017-12-10T18:06:55Z', '%Y-%m-%dT%H:%M:%SZ')
             date = datetime.strptime(cooked_post["updated"], '%Y-%m-%dT%H:%M:%SZ')
             
-            embed = Embed(title=title, description=desc, url=post_url, timestamp=date, color=000000)
-            async with aiohttp.ClientSession() as session:
-                webhook = Webhook.from_url(d_url, adapter=AsyncWebhookAdapter(session))
-                await webhook.send(embed=embed)
+            embed = DiscordEmbed(title=title, description=desc, url=post_url, timestamp=date, color=000000)
+            webhook.add_embed(embed)
+            webhook.execute()
     else:
         print('No new unread posts found.')
 
@@ -54,8 +53,7 @@ if __name__ == '__main__':
     find_new_posts()
     conn = sqlite3.connect('read_posts.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS read_posts (id text)''')  
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(cook_prepped_posts())
-    loop.close()
+    c.execute('''CREATE TABLE IF NOT EXISTS read_posts (id text)''')
+    webhook = DiscordWebhook(url=d_url)
+    cook_prepped_posts()
     c.close()
