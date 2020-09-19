@@ -3,10 +3,12 @@ from piazza_api import network as net
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from secrets import p_pass, p_email, p_network, d_url
 from datetime import datetime
-import sqlite3, html
+import sqlite3, HTMLParser
 
 prepped_posts = []
 cooked_posts = []
+
+html_parser = HTMLParser.HTMLParser()
 
 def find_new_posts(limit=50):
     p_instance = Piazza()
@@ -33,8 +35,8 @@ def cook_prepped_posts():
         # Send-off to the web-hook
         for cooked_post in cooked_posts:
             #print(cooked_post)
-            title = html.unescape(cooked_post["subject"])
-            desc = html.unescape(cooked_post["content_snipet"])
+            title = html_parser.unescape(cooked_post["subject"])
+            desc = html_parser.unescape(cooked_post["content_snipet"])
             post_url = 'https://piazza.com/class/' + str(cooked_post["nid"]) + "?cid=" + str(cooked_post["nr"])
             # datetime.strptime('2017-12-10T18:06:55Z', '%Y-%m-%dT%H:%M:%SZ')
             date = datetime.strptime(cooked_post["updated"], '%Y-%m-%dT%H:%M:%SZ')
